@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>05 | 递归（上）：泛化数学归纳，如何将复杂问题简单化？</title>
+</head>
+
+<body>
+    <script>
+        // 问题：
+        // 假设有四种面额的钱币，1 元、2 元、5 元和 10 元，而您一共给我 10 元，那您可以奖赏我 1 张 10 元，
+        // 或者 10 张 1 元，或者 5 张 1 元外加 1 张 5 元等等。如果考虑每次奖赏的金额和先后顺序，那么最终
+        // 一共有多 少种不同的奖赏方式呢？
+
+        // 穷举法
+        /**
+         * author：weijie
+         * describe： 
+         * @param {Number} total 总金额
+         * @param {Array} rewards 面额  [1,2,5,10]
+         * @return <Number> 总共排列组合
+         */
+        const getRewards = (total, rewards) => {
+            let count = 0;
+            const getRewards = (total, rewards, /*arr = []*/ ) => {
+                if (total === 0) {
+                    count++
+                    // console.log(arr)
+                    return
+                } else if (total < 0) {
+                    return;
+                }
+                for (let i = 0; i < rewards.length; i++) {
+                    // let newArr = arr.slice(0);
+                    let result = total - rewards[i];
+                    // newArr.push(rewards[i])
+                    getRewards(result, rewards, /*newArr*/ )
+                }
+            }
+            getRewards(total, rewards)
+            return count
+        }
+
+        const rewards = [1, 2, 5, 10];
+        const total = 20;
+        getRewards(total, rewards)
+        console.log(count)
+    </script>
+</body>
+
+</html>
