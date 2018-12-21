@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+
+<body>
+    <script>
+        // 单链表
+        class OneNode {
+            constructor(value) {
+                this.value = value;
+                this.next = null;
+            }
+            setNext(next) {
+                this.next = next;
+            }
+            clear() {
+                this.value = null;
+                this.next = null;
+            }
+        }
+        class LinkedList {
+            constructor() {
+                this.firstNode = null;
+                this.endtNode = null;
+                this.length = 0;
+            }
+            // 任意位置插入
+            insert(value, position) {
+                if (position !== undefined && (typeof position !== "number" || position < 0 || position > this.length - 1)) return false;
+                const node = new OneNode(value);
+                const f = this.firstNode;
+                const e = this.endtNode;
+                if (!this.getSize()) {
+                    this.firstNode = node;
+                    this.endtNode = node;
+                } else if (position === 0) {
+                    node.setNext(f)
+                    this.firstNode = node
+                } else if (position === undefined) {
+                    e.setNext(node)
+                    this.endtNode = node
+                } else {
+                    let index = 0,
+                        pre = null,
+                        current = f;
+                    while (index < position) {
+                        index++;
+                        pre = current;
+                        current = current.next;
+                    }
+                    pre.setNext(node)
+                    node.setNext(current)
+                }
+                this.length++;
+                return true;
+            }
+            // 依据 索引  删除元素
+            removeByIndex(index) {
+                if (typeof index !== "number" || index < 0 || index > this.length - 1) return false;
+
+                let f = this.firstNode;
+                let e = this.endtNode;
+                if (!this.getSize()) {
+                    return false
+                } else if (index === 0) {
+                    this.firstNode = this.firstNode.next;
+                    f.clear()
+                } else {
+                    let pre = null,
+                        len = 0,
+                        node = f;
+                    while (len < index) {
+                        len++;
+                        pre = node;
+                        node = node.next;
+                    }
+                    pre.setNext(node.next)
+                    node.clear();
+                    if (index === this.length - 1) {
+                        this.endtNode = pre
+                    }
+                }
+                this.length--;
+                return true
+            }
+            // 依据索引查询元素
+            findByIndex(index) {
+                if (typeof index !== "number" || index < 0 || index > this.length - 1) return -1;
+                let node = this.firstNode;
+                let len = 0;
+                while (len < index) {
+                    len++;
+                    node = node.next
+                }
+                return node || -1
+            }
+            // 依据 值 查询元素
+            findByValue(value) {
+                let node = this.firstNode;
+                while (node) {
+                    if (node.value === value) {
+                        return node;
+                    } else {
+                        node = node.next;
+                    }
+                }
+                return -1
+            }
+            // 获取链表头
+            getFirstNode() {
+                return this.firstNode;
+            }
+            // 获取链表尾
+            getEndtNode() {
+                return this.endtNode;
+            }
+            // 获取链表长度
+            getSize() {
+                return this.length;
+            }
+        }
+
+        let one = new LinkedList();
+        one.insert(1)
+        one.insert(2)
+        one.insert(3)
+        one.insert(4)
+        // one.insert('insert1')
+        // console.log(one.removeByIndex(3))
+        console.log(one.findByIndex(4))
+        console.log(one.findByValue(3))
+        // console.log(one)
+
+        // 双向链表
+        class DoubleNode {
+            constructor(value) {
+                this.value = value;
+                this.pre = null;
+                this.next = null;
+            }
+            setNext(next) {
+                this.next = next;
+            }
+            setPre(pre) {
+                this.pre = pre;
+            }
+            clear() {
+                this.value = null;
+                this.pre = null;
+                this.next = null;
+            }
+        }
+        class DoublyLinkedList {
+            constructor() {
+                this.firstNode = null;
+                this.endtNode = null;
+                this.length = 0;
+            }
+            // 任意位置插入
+            insert(value, position) {
+                if (position !== undefined && (typeof position !== "number" || position < 0 || position > this.length - 1)) return false;
+                const node = new DoubleNode(value);
+                let f = this.firstNode;
+                let e = this.endtNode;
+                if (!f || !e) {
+                    this.firstNode = node
+                    this.endtNode = node
+                } else if (position === undefined) {
+                    e.setNext(node)
+                    node.setPre(e)
+                    this.endtNode = node
+                } else if (position === 0) {
+                    f.setPre(node)
+                    node.setNext(f)
+                    this.firstNode = node
+                } else {
+                    let current = this.findByIndex(position);
+                    current.pre.setNext(node)
+                    node.setPre(current.pre)
+                    node.setNext(current)
+                    current.setPre(node)
+                }
+                this.length++;
+                return true;
+            }
+            // 依据索引删除
+            removeByIndex(index) {
+                if (typeof index !== "number" || index < 0 || index > this.length - 1) return false;
+                let f = this.firstNode;
+                let e = this.endtNode;
+                if (!this.getSize()) {
+                    return false
+                } else if (index === this.length - 1) {
+                    this.endtNode = this.endtNode.pre;
+                    this.endtNode.setNext(null);
+                    e.clear()
+                } else if (index === 0) {
+                    this.firstNode = this.firstNode.next;
+                    this.firstNode.setPre(null);
+                    f.clear()
+                } else {
+                    let current = this.findByIndex(index);
+                    let p = current.pre;
+                    let n = current.next;
+                    p.setNext(n);
+                    n.setPre(p);
+                    current.clear()
+                }
+                this.length--;
+                return true;
+            }
+            // 依据索引查询元素
+            findByIndex(index) {
+                if (typeof index !== "number" || index < 0 || index >= this.length) return -1;
+                let node = this.firstNode;
+                let len = 1;
+                while (len <= index) {
+                    len++;
+                    node = node.next
+                }
+                return node
+            }
+            // 依据 值 查询元素
+            findByValue(value) {
+                let node = this.firstNode;
+                while (node) {
+                    if (node.value === value) {
+                        return node;
+                    } else {
+                        node = node.next;
+                    }
+                }
+                return -1
+            }
+            // 获取链表头
+            getFirstNode() {
+                return this.firstNode;
+            }
+            // 获取链表尾
+            getEndtNode() {
+                return this.endtNode;
+            }
+            // 获取链表长度
+            getSize() {
+                return this.length;
+            }
+        }
+
+        // const doubly = new DoublyLinkedList()
+        // doubly.insert(1)
+        // doubly.insert(2)
+        // doubly.insert(3)
+        // const i = doubly.getSize()
+        // doubly.insert(5, i - 1)
+        // doubly.insert("weijie", 0)
+        // doubly.removeByIndex(doubly.getSize() - 1)
+        // console.log(doubly.getFirstNode())
+        // console.log(doubly.getEndtNode())
+        // console.log(doubly.findByValue('weijie'))
+        // console.log(doubly.findByValue(1))
+        // console.log(doubly.findByValue(4))
+        // console.log(doubly.findByValue(4))
+    </script>
+</body>
+
+</html>
