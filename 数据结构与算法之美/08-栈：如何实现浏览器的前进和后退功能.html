@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>08 | 栈：如何实现浏览器的前进和后退功能？</title>
+</head>
+
+<body>
+    <script>
+        //栈 数组实现方式
+        class ArrayStack {
+            constructor(arrayLength = 10) {
+                if (arrayLength < 0) {
+                    arrayLength = 10;
+                }
+                this.pointer = arrayLength - 1;
+                this.store = new Array(arrayLength);
+            }
+            push(value) {
+                if (this.pointer < 0) {
+                    const len = this.store.length;
+                    const newStore = new Array(len * 2);
+                    for (let i = 0; i < len; i++) {
+                        newStore[len + i] = this.store[i]
+                    }
+                    this.pointer = len - 1;
+                    this.store = newStore;
+                }
+                this.store[this.pointer] = value;
+                --this.pointer;
+            }
+            pop() {
+                const len = this.store.length;
+                if (len - 1 === this.pointer) return undefined;
+                ++this.pointer;
+                const value = this.store[this.pointer];
+                this.store[this.pointer] = undefined;
+                return value;
+            }
+            clear() {
+                const len = this.store.length;
+                this.pointer = len - 1;
+                this.store = new Array(len);
+            }
+        }
+        // 前进后退功能
+        class ForwardAndBack {
+            constructor() {
+                this.main = new ArrayStack();
+                this.attendants = new ArrayStack();
+            }
+            go(value) {
+                if (value !== undefined) {
+                    this.main.push(value)
+                    this.attendants.clear()
+                } else {
+                    value = this.attendants.pop();
+                    value && this.main.push(value)
+                }
+                console.log(`go to ${value}`)
+            }
+            back(num) {
+                if (!num || typeof num !== "number" || num <= 0) {
+                    num = 1
+                }
+                let value;
+                for (let i = 0; i < num; i++) {
+                    value = this.main.pop();
+                    if (value === undefined) {
+                        break;
+                    }
+                    this.attendants.push(value)
+                }
+            }
+        }
+        const test = new ForwardAndBack();
+        test.go(1)
+        test.go(2)
+        test.go(3)
+        test.go(4)
+        test.go()
+        test.back(5)
+        test.go(1)
+        console.log(test)
+    </script>
+</body>
+
+</html>
