@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>09 | 队列：队列在线程池等有限资源池中的应用</title>
+</head>
+
+<body>
+    <script>
+
+        // 循环队列的实现
+        // 当前队列会占用一个空位 用于判断
+        class CircularQueue {
+            constructor(length = 10) {
+                let len = length + 1;
+                this.store = new Array(len);
+                this.length = len;
+                this.head = 0;
+                this.tail = 0;
+
+            }
+            // 入队
+            enqueue(value) {
+                if (this.isFull()) return false;
+                this.store[this.tail] = value;
+                // 简单理解就是 如果长度为 this.length 取模为 0 ； 其他不变
+                this.tail = (this.tail + 1) % this.length;
+                return true
+            }
+            // 出队
+            dequeue() {
+                if (this.isEmpty()) return;
+                const value = this.store[this.head];
+                this.store[this.head] = undefined ;
+                // 简单理解就是 如果长度为 this.length 取模为 0 ； 其他不变
+                this.head = (this.head + 1) % this.length;
+                return value
+
+            }
+            // 是否为满队列
+            isFull() {
+                return (this.tail + 1) % this.length === this.head;
+            }
+            // 是否为空队列
+            isEmpty() {
+                return this.head === this.tail
+            }
+        }
+
+        const test = new CircularQueue(5)
+        // debugger;
+        test.enqueue(1)
+        test.enqueue(2)
+        test.enqueue(3)
+        test.enqueue(4)
+        test.enqueue(5)
+        test.dequeue()
+        
+        test.enqueue(6)
+        test.dequeue()
+        test.enqueue(7)
+        test.dequeue()
+        test.enqueue(8)
+        console.log(test)
+    </script>
+</body>
+
+</html>
