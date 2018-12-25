@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>12 | 排序（下）：如何用快排思想在O(n)内查找第K大元素？</title>
+</head>
+
+<body>
+    <script>
+        // var arr = ((num = 8888) => {
+        //     var arr = [];
+        //     for (var i = 0; i < num; i++) {
+        //         arr.push(Math.floor(Math.random() * 1000))
+        //     }
+        //     return arr
+        // })(10)
+        // 占时没有想到如何原地排序求第K大元素
+        // 重复值的情况 测试为不确定.....
+
+        /** 查找第K大元素
+        * @param {Array}    数组
+        * @param {Number}  查找第K大的索引
+        * @param {Function} 比对的函数。可以类比 原生sort传入的方法
+        * @return <Number> 查寻到的值
+        */
+
+        let findKey = function (arr, key, fn) {
+            fn = fn && typeof fn === "function" ? fn : findKey.compare;
+            let l = arr.length;
+            if (l === 0 || key > l) return -1;
+            if (l === 1 && key === 1) return arr[0]
+            let pivotIndex = Math.floor(l / 2),
+                pivot = arr[pivotIndex],
+                left = [],
+                right = [];
+            for (let i = 0; i < l; i++) {
+                if (i === pivotIndex) continue;
+                if (fn(arr[i], pivot) > 0) {
+                    right.push(arr[i])
+                } else {
+                    left.push(arr[i])
+                }
+            }
+            let rightLength = right.length;
+            if (rightLength + 1 === key) {
+                return pivot
+            } else if (rightLength >= key) {
+                return findKey(right, key)
+            } else {
+                return findKey(left, key - rightLength - 1)
+            }
+        }
+        findKey.compare = (a, b) => {
+            if (a === b) return 0
+            return a - b
+        };
+        const arr = [
+            { a: 1 },
+            { a: 1 },
+            { a: 4 },
+            { a: 4 },
+            { a: 1 },
+            { a: 3 },
+            { a: 45 },
+            { a: 3 },
+        ]
+        let a = findKey(arr, 2, (a, b) => {
+            return a.a - b.a
+        })
+        console.log(a === arr[5])
+        console.log(a === arr[6])
+    </script>
+</body>
+
+</html>
