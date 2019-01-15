@@ -10,13 +10,14 @@
 
 <body>
     <script>
-        // var arr = ((num = 8888) => {
-        //     var arr = [];
-        //     for (var i = 0; i < num; i++) {
-        //         arr.push(Math.floor(Math.random() * 1000))
-        //     }
-        //     return arr
-        // })(10)
+        var arr = ((num = 8888) => {
+            var arr = [],
+                l = num * 100;
+            for (var i = 0; i < num; i++) {
+                arr.push(Math.floor(Math.random() * l))
+            }
+            return arr
+        })(100)
         // 占时没有想到如何原地排序求第K大元素
         // 重复值的情况 测试为不确定.....
 
@@ -26,7 +27,7 @@
         * @param {Function} 比对的函数。可以类比 原生sort传入的方法
         * @return <Number> 查寻到的值
         */
-
+        let a = 0;
         let findKey = function (arr, key, fn) {
             fn = fn && typeof fn === "function" ? fn : findKey.compare;
             let l = arr.length;
@@ -37,6 +38,7 @@
                 left = [],
                 right = [];
             for (let i = 0; i < l; i++) {
+                a++;
                 if (i === pivotIndex) continue;
                 if (fn(arr[i], pivot) > 0) {
                     right.push(arr[i])
@@ -57,21 +59,21 @@
             if (a === b) return 0
             return a - b
         };
-        const arr = [
-            { a: 1 },
-            { a: 1 },
-            { a: 4 },
-            { a: 4 },
-            { a: 1 },
-            { a: 3 },
-            { a: 45 },
-            { a: 3 },
-        ]
-        let a = findKey(arr, 2, (a, b) => {
-            return a.a - b.a
-        })
-        console.log(a === arr[3])
-        console.log(a === arr[2])
+        // const arr = [
+        //     { a: 1 },
+        //     { a: 1 },
+        //     { a: 4 },
+        //     { a: 4 },
+        //     { a: 1 },
+        //     { a: 3 },
+        //     { a: 45 },
+        //     { a: 3 },
+        // ]
+        let b = findKey(arr, 5)
+        console.log(arr.length)
+        console.log(arr)
+        console.log(a)
+        console.log(b)
     </script>
 </body>
 

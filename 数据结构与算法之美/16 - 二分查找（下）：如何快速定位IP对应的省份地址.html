@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>16 | 二分查找（下）：如何快速定位IP对应的省份地址？</title>
+</head>
+
+<body>
+    <img src="http://file.iweijie.cn/static/uploads/2019-01/image/0dfb176055a7ee487f1bf2a7974409bdc.jpg" alt="">
+    <script>
+        // 正常 二分查找 （任意值相等即返回）
+        function bsearch(arr = [], value, compare) {
+            let length = arr && arr.length;
+            if (value === undefined || !length) return -1;
+            let low = 0;
+            let height = length - 1;
+            compare = compare || function (a, b) { return a - b };
+            while (height >= low) {
+                let mid = Math.floor(low + (height - low) / 2);
+                let num = compare(arr[mid], value);
+                if (num > 0) {
+                    height = mid - 1
+                } else if (num < 0) {
+                    low = mid + 1;
+                } else {
+                    console.log(mid)
+                    return arr[mid]
+                }
+            }
+            return -1
+        }
+        // 变体一：查找第一个值等于给定值的元素
+        function bsearch(arr = [], value, compare) {
+            let length = arr && arr.length;
+            if (value === undefined || !length) return -1;
+            let low = 0;
+            let height = length - 1;
+            compare = compare || function (a, b) { return a - b };
+            while (height >= low) {
+                let mid = Math.floor(low + (height - low) / 2);
+                let num = compare(arr[mid], value);
+                if (num > 0) {
+                    height = mid - 1
+                } else if (num < 0) {
+                    low = mid + 1;
+                } else {
+                    if (mid === 0 || compare(arr[mid - 1], value) < 0) {
+                        console.log('mid', mid)
+                        return arr[mid]
+                    }
+                    height = mid - 1
+                }
+            }
+            return -1
+        }
+        // 变体二：查找最后一个值等于给定值的元素
+        function bsearch(arr = [], value, compare) {
+            let length = arr && arr.length;
+            if (value === undefined || !length) return -1;
+            let low = 0;
+            let height = length - 1;
+            compare = compare || function (a, b) { return a - b };
+            while (height >= low) {
+                let mid = Math.floor(low + (height - low) / 2);
+                let num = compare(arr[mid], value);
+                if (num > 0) {
+                    height = mid - 1
+                } else if (num < 0) {
+                    low = mid + 1;
+                } else {
+                    if (mid === length || compare(arr[mid + 1], value) > 0) {
+                        console.log('mid', mid)
+                        return arr[mid]
+                    }
+                    low = mid + 1
+                }
+            }
+            return -1
+        }
+
+        // 变体三：查找第一个大于等于给定值的元素
+        function bsearch(arr = [], value, compare) {
+            let length = arr && arr.length;
+            if (value === undefined || !length) return -1;
+            let low = 0;
+            let height = length - 1;
+            compare = compare || function (a, b) { return a - b };
+            while (height >= low) {
+                let mid = Math.floor(low + (height - low) / 2);
+                let num = compare(arr[mid], value);
+                if (num >= 0) {
+                    if (mid === 0 || compare(arr[mid - 1], value) < 0) {
+                        console.log(mid)
+                        return arr[mid]
+                    }
+                    height = mid - 1
+                } else {
+                    low = mid + 1;
+                }
+            }
+            return -1
+        }
+        // let arr = [1, 4, 6, 8, 10, 12, 33, 55, 88];
+        // console.log(bsearch(arr, 100))
+        // 变体四：查找最后一个小于等于给定值的元素
+        function bsearch(arr = [], value, compare) {
+            let length = arr && arr.length;
+            if (value === undefined || !length) return -1;
+            let low = 0;
+            let height = length - 1;
+            compare = compare || function (a, b) { return a - b };
+            while (height >= low) {
+                let mid = Math.floor(low + (height - low) / 2);
+                let num = compare(arr[mid], value);
+                if (num > 0) {
+                    height = mid - 1
+                } else {
+                    // debugger
+                    if (mid === height || compare(arr[mid + 1], value) > 0) {
+                        console.log(mid)
+                        return arr[mid]
+                    }
+                    low = mid + 1;
+                }
+            }
+            return -1
+        }
+        // let arr = [1, 4, 6, 8, 10, 12, 33, 55, 88];
+        // console.log(bsearch(arr, 5))
+    </script>
+</body>
+
+</html>
