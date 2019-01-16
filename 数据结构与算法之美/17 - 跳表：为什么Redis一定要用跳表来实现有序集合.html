@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>17 | 跳表：为什么Redis一定要用跳表来实现有序集合？</title>
+</head>
+
+<body>
+    <script>
+        // 双向链表
+        class DoubleNode {
+            constructor(value) {
+                if (value instanceof DoubleNode) return value;
+                this.value = value;
+                this.pre = null;
+                this.next = null;
+            }
+            setNext(next) {
+                this.next = next;
+            }
+            setPre(pre) {
+                this.pre = pre;
+            }
+            clear() {
+                this.value = null;
+                this.pre = null;
+                this.next = null;
+            }
+        }
+        class DoublyLinkedList {
+            constructor() {
+                this.firstNode = null;
+                this.endtNode = null;
+                this.length = 0;
+            }
+            // 任意位置插入
+            insert(value, position) {
+                if (position !== undefined && (typeof position !== "number" || position < 0 || position > this.length - 1)) return false;
+                const node = new DoubleNode(value);
+                let f = this.firstNode;
+                let e = this.endtNode;
+                if (!f || !e) {
+                    this.firstNode = node
+                    this.endtNode = node
+                } else if (position === undefined) {
+                    e.setNext(node)
+                    node.setPre(e)
+                    this.endtNode = node
+                } else if (position === 0) {
+                    f.setPre(node)
+                    node.setNext(f)
+                    this.firstNode = node
+                } else {
+                    let current = this.findByIndex(position);
+                    current.pre.setNext(node)
+                    node.setPre(current.pre)
+                    node.setNext(current)
+                    current.setPre(node)
+                }
+                this.length++;
+                return true;
+            }
+            // 依据索引删除
+            removeByIndex(index) {
+                if (typeof index !== "number" || index < 0 || index > this.length - 1) return false;
+                let f = this.firstNode;
+                let e = this.endtNode;
+                if (!this.getSize()) {
+                    return false
+                } else if (index === this.length - 1) {
+                    this.endtNode = this.endtNode.pre;
+                    this.endtNode.setNext(null);
+                    e.clear()
+                } else if (index === 0) {
+                    this.firstNode = this.firstNode.next;
+                    this.firstNode.setPre(null);
+                    f.clear()
+                } else {
+                    let current = this.findByIndex(index);
+                    let p = current.pre;
+                    let n = current.next;
+                    p.setNext(n);
+                    n.setPre(p);
+                    current.clear()
+                }
+                this.length--;
+                return true;
+            }
+            // 依据索引查询元素
+            findByIndex(index) {
+                if (typeof index !== "number" || index < 0 || index >= this.length) return -1;
+                let node = this.firstNode;
+                let len = 1;
+                while (len <= index) {
+                    len++;
+                    node = node.next
+                }
+                return node
+            }
+            // 依据 值 查询元素
+            findByValue(value) {
+                let node = this.firstNode;
+                while (node) {
+                    if (node.value === value) {
+                        return node;
+                    } else {
+                        node = node.next;
+                    }
+                }
+                return -1
+            }
+            // 依据 node 查询后续是否存在该元素
+            findByValue(value) {
+                let node = this.firstNode;
+                while (node) {
+                    if (node.value === value) {
+                        return node;
+                    } else {
+                        node = node.next;
+                    }
+                }
+                return -1
+            }
+            // 插入某个节点之前
+            insertBeforeNode(node, before) {
+                if (!node ||
+                    !before ||
+                    !(node instanceof DoubleNode) ||
+                    !(before instanceof DoubleNode)
+                ) return false
+                let f = this.firstNode;
+                if (!before.pre) {
+                    f.setPre(node)
+                    node.setNext(f)
+                    this.firstNode = node
+                } else {
+                    before.pre.setNext(node)
+                    node.setPre(before.pre)
+                    node.setNext(before)
+                    before.setPre(node)
+                }
+                this.length++;
+                return true;
+            }
+            // 插入某个节点之后
+            insertAfterNode(node, after) {
+                if (!node ||
+                    !after ||
+                    !(node instanceof DoubleNode) ||
+                    !(after instanceof DoubleNode)
+                ) return false
+                let e = this.endtNode;
+                if (!after.next) {
+                    e.setNext(node)
+                    node.setPre(e)
+                    this.endtNode = node
+                } else {
+                    after.next.setPre(node)
+                    node.setNext(after.next)
+                    after.setNext(node)
+                    node.setPre(after)
+                }
+                this.length++;
+                return true;
+            }
+            // 获取链表头
+            getFirstNode() {
+                return this.firstNode;
+            }
+            // 获取链表尾
+            getEndtNode() {
+                return this.endtNode;
+            }
+            // 获取链表长度
+            getSize() {
+                return this.length;
+            }
+        }
+        // 跳表节点
+        class SkipListNode {
+            constructor(value, level = 0) {
+                this._value = value
+                this._level = level
+                for (let i = 0; i <= level; i++) {
+                    this[i] = new DoubleNode(this)
+                }
+            }
+            clear() {
+                for (let i = 0; i <= this._level; i++) {
+                    this[i] && this[i].clear()
+                }
+                this._value = null;
+                this._level = null;
+            }
+        }
+
+        /**
+        * 跳表的实现
+        * @params level      number   层级
+        * @params compare   function 值之间比对的方法
+        */
+        class SkipList {
+            constructor(level = 5, compare) {
+                this.level = level;
+                this.linkedListMap = {};
+                if (compare && typeof compare === "function") {
+                    this.compare = compare
+                }
+                this.init()
+            }
+            // 初始化 用于设置 表头 表尾
+            init() {
+                let map = this.linkedListMap;
+                for (let i = 0; i <= this.level; i++) {
+                    map[i] = new DoublyLinkedList();
+                }
+            }
+            // 获取随机层数
+            randomlevel(level) {
+                if (level !== undefined && level <= this.level) return level;
+                level = this.level;
+                let current = 0;
+                while (current <= level) {
+                    if (Math.random() > 0.5) {
+                        ++current;
+                    } else {
+                        return current
+                    }
+                }
+                return current
+            }
+            //  添加
+            add(value) {
+                if (value === undefined) return;
+                let linkedListMap = this.linkedListMap;
+                let level = this.randomlevel();
+                let node = new SkipListNode(value, level);
+                this.insert(node)
+            }
+            // 插入
+            insert(node) {
+                for (let i = 0; i <= level; i++) {
+                    linkedListMap[i]
+                }
+            }
+            // 单层插入
+            singleInsert(level, doubleNodeInstance, skipListNodeInstance) {
+                let linkedListMap = this.linkedListMap;
+                let currentLinkedListMap = linkedListMap[level];
+                if (skipListNodeInstance) {
+                    
+                }
+            }
+
+            // 默认比对的方法
+            compare(a, b) {
+                return a - b
+            }
+        }
+        let a = new SkipList(3)
+        console.log(a)
+        a.add(4)
+    </script>
+</body>
+
+</html>

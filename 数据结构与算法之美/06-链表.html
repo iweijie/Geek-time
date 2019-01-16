@@ -13,6 +13,7 @@
         // 单链表
         class OneNode {
             constructor(value) {
+                if(value instanceof OneNode) return value;
                 this.value = value;
                 this.next = null;
             }
@@ -140,6 +141,7 @@
         // 双向链表
         class DoubleNode {
             constructor(value) {
+                if(value instanceof DoubleNode) return value;
                 this.value = value;
                 this.pre = null;
                 this.next = null;
