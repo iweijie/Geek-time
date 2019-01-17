@@ -38,7 +38,7 @@
             }
             // 任意位置插入
             insert(value, position) {
-                if (position !== undefined && (typeof position !== "number" || position < 0 || position > this.length - 1)) return false;
+                if (position !== undefined && (typeof position !== "number" || position < 0 || (this.length && position > this.length - 1))) return false;
                 const node = new DoubleNode(value);
                 let f = this.firstNode;
                 let e = this.endtNode;
@@ -89,6 +89,26 @@
                 this.length--;
                 return true;
             }
+            // 依据 节点 删除自身
+            removeByNode(node) {
+                let f = this.firstNode;
+                let e = this.endtNode;
+                if (node === f) {
+                    this.firstNode = node.next;
+                    this.firstNode.setPre(null);
+                } else if (node === e) {
+                    this.endtNode = node.pre;
+                    this.firstNode.setNext(null);
+                    node.clear()
+                } else {
+                    let p = node.pre;
+                    let n = node.next;
+                    p.setNext(n);
+                    n.setPre(p);
+                }
+                node.clear();
+                this.length--;
+            }
             // 依据索引查询元素
             findByIndex(index) {
                 if (typeof index !== "number" || index < 0 || index >= this.length) return -1;
@@ -125,12 +145,12 @@
                 return -1
             }
             // 插入某个节点之前
-            insertBeforeNode(node, before) {
-                if (!node ||
+            insertBeforeNode(before, value) {
+                if (!value ||
                     !before ||
-                    !(node instanceof DoubleNode) ||
                     !(before instanceof DoubleNode)
                 ) return false
+                const node = new DoubleNode(value);
                 let f = this.firstNode;
                 if (!before.pre) {
                     f.setPre(node)
@@ -146,12 +166,12 @@
                 return true;
             }
             // 插入某个节点之后
-            insertAfterNode(node, after) {
-                if (!node ||
+            insertAfterNode(after, value) {
+                if (!value ||
                     !after ||
-                    !(node instanceof DoubleNode) ||
                     !(after instanceof DoubleNode)
-                ) return false
+                ) return false;
+                const node = new DoubleNode(value);
                 let e = this.endtNode;
                 if (!after.next) {
                     e.setNext(node)
@@ -166,6 +186,35 @@
                 this.length++;
                 return true;
             }
+            // 查询第一个大于给定值的元素
+            findFirstGtNode(value, compare, startNode) {
+                if (!this.getSize()) return "__empty"
+                compare = compare || DoublyLinkedList.compare;
+                let first = startNode || this.firstNode;
+                while (first) {
+                    let num = compare(value, first.value && first.value._value);
+                    if (num < 0) return first;
+                    first = first.next
+                }
+                return "__last"
+            }
+            // 查询最后一个小于给定值的元素
+            findLastEqNode(value, compare, startNode) {
+                if (!this.getSize()) return "__empty"
+                compare = compare || DoublyLinkedList.compare;
+                let first = startNode || this.firstNode;
+                let num = compare(value, first.value && first.value._value);
+                if (num > 0) {
+                    if (first === this.firstNode) return "__empty"
+                    return first
+                }
+                while (first.next) {
+                    let next = first.next;
+                    if (num < 0 && (num = compare(value, next.value && next.value._value)) > 0) return first;
+                    first = first.next
+                }
+                return "__last"
+            }
             // 获取链表头
             getFirstNode() {
                 return this.firstNode;
@@ -177,6 +226,10 @@
             // 获取链表长度
             getSize() {
                 return this.length;
+            }
+            // 默认比对的方法
+            static compare(a, b) {
+                return a.value - b.value
             }
         }
         // 跳表节点
@@ -219,15 +272,13 @@
                 }
             }
             // 获取随机层数
-            randomlevel(level) {
-                if (level !== undefined && level <= this.level) return level;
-                level = this.level;
+            static randomlevel(level) {
                 let current = 0;
-                while (current <= level) {
+                while (current < level) {
                     if (Math.random() > 0.5) {
                         ++current;
                     } else {
-                        return current
+                        return current 
                     }
                 }
                 return current
@@ -236,33 +287,44 @@
             add(value) {
                 if (value === undefined) return;
                 let linkedListMap = this.linkedListMap;
-                let level = this.randomlevel();
+                let level = SkipList.randomlevel(this.level);
                 let node = new SkipListNode(value, level);
                 this.insert(node)
             }
             // 插入
             insert(node) {
-                for (let i = 0; i <= level; i++) {
-                    linkedListMap[i]
-                }
-            }
-            // 单层插入
-            singleInsert(level, doubleNodeInstance, skipListNodeInstance) {
                 let linkedListMap = this.linkedListMap;
-                let currentLinkedListMap = linkedListMap[level];
-                if (skipListNodeInstance) {
-                    
+                let current = null;
+                for (let i = this.level; i >= 0; i--) {
+                    let linkedList = linkedListMap[i];
+                    let value = linkedList.findLastEqNode(node._value, this.compare, current);
+                    if (value === '__empty') {
+                        node[i] && linkedList.insert(node[i], 0)
+                        current = null;
+                    } else if (value === '__last') {
+                        current = linkedList.getEndtNode()
+                        node[i] && linkedList.insert(node[i])
+                    } else {
+                        linkedList.insertAfterNode(value, node[i])
+                        current = value
+                    }
                 }
             }
 
             // 默认比对的方法
-            compare(a, b) {
+            static compare(a, b) {
                 return a - b
             }
         }
-        let a = new SkipList(3)
-        console.log(a)
+        let a = new SkipList(3, function (a, b) {
+            return a - b
+        })
+        a.add(1)
         a.add(4)
+        a.add(2)
+        a.add(3)
+        a.add(5)
+        console.log(a)
     </script>
 </body>
 
