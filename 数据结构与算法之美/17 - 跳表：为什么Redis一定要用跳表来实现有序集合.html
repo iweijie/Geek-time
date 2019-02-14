@@ -10,6 +10,11 @@
 
 <body>
     <script>
+        // 常量
+        const hashNum = Math.pow(2, 32); // hash 取模
+        const __empty = {}; // 查询当前层数小于当比对值为空时返回
+        const __last = {};  // 查询当前层数大于等于当比对值为空时返回
+
         // 双向链表
         class DoubleNode {
             constructor(value) {
@@ -186,34 +191,36 @@
                 this.length++;
                 return true;
             }
-            // 查询第一个大于给定值的元素
-            findFirstGtNode(value, compare, startNode) {
-                if (!this.getSize()) return "__empty"
-                compare = compare || DoublyLinkedList.compare;
+
+            // // 查询第一个大于给定值的元素
+            // findFirstGtNode(value, compare, startNode) {
+            //     if (!this.getSize()) return __empty
+            //     compare = compare || DoublyLinkedList.compare;
+            //     let first = startNode || this.firstNode;
+            //     while (first) {
+            //         let num = compare(value, first.value && first.value._value && first.value._value.key);
+            //         if (num < 0) return first;
+            //         first = first.next
+            //     }
+            //     return __last
+            // }
+
+            // 查询最后一个小于等于给定值的元素
+            findLastEqNode(key, startNode) {
+                if (!this.getSize()) return __empty;
                 let first = startNode || this.firstNode;
-                while (first) {
-                    let num = compare(value, first.value && first.value._value);
-                    if (num < 0) return first;
-                    first = first.next
-                }
-                return "__last"
-            }
-            // 查询最后一个小于给定值的元素
-            findLastEqNode(value, compare, startNode) {
-                if (!this.getSize()) return "__empty"
-                compare = compare || DoublyLinkedList.compare;
-                let first = startNode || this.firstNode;
-                let num = compare(value, first.value && first.value._value);
-                if (num > 0) {
-                    if (first === this.firstNode) return "__empty"
+                const compare = DoublyLinkedList.compare;
+                let num = compare(key, first.value && first.value._hashKey);
+                if (num < 0) {
+                    if (first === this.firstNode) return __empty
                     return first
                 }
                 while (first.next) {
                     let next = first.next;
-                    if (num < 0 && (num = compare(value, next.value && next.value._value)) > 0) return first;
+                    if (num >= 0 && (num = compare(key, next.value && next.value._hashKey)) < 0) return first;
                     first = first.next
                 }
-                return "__last"
+                return __last
             }
             // 获取链表头
             getFirstNode() {
@@ -229,14 +236,15 @@
             }
             // 默认比对的方法
             static compare(a, b) {
-                return a.value - b.value
+                return a - b
             }
         }
         // 跳表节点
         class SkipListNode {
-            constructor(value, level = 0) {
-                this._value = value
-                this._level = level
+            constructor(hashKey, key, value, level = 0) {
+                this._value = { key, value };
+                this._level = level;
+                this._hashKey = hashKey;
                 for (let i = 0; i <= level; i++) {
                     this[i] = new DoubleNode(this)
                 }
@@ -255,20 +263,62 @@
         * @params level      number   层级
         * @params compare   function 值之间比对的方法
         */
+
         class SkipList {
-            constructor(level = 5, compare) {
+            constructor({
+                level = 5,
+                compare,
+                hashNum,
+            }) {
+                // 用于设置当前跳表层级
                 this.level = level;
+                /**
+                * 用于设置当前跳表层级双向链表引用
+                * 格式 ： {
+                *       0 ：new DoubleNode()
+                *       1 ：new DoubleNode()
+                *       2 ：new DoubleNode()
+                *       3 ：new DoubleNode()
+                *    }
+                */
                 this.linkedListMap = {};
-                if (compare && typeof compare === "function") {
-                    this.compare = compare
-                }
-                this.init()
+                this.init();
             }
             // 初始化 用于设置 表头 表尾
             init() {
                 let map = this.linkedListMap;
                 for (let i = 0; i <= this.level; i++) {
                     map[i] = new DoublyLinkedList();
+                }
+            }
+            //  添加
+            add(key, value) {
+                if (key === undefined) return;
+                let linkedListMap = this.linkedListMap;
+                let level = SkipList.randomlevel(this.level);
+                const hashKey = SkipList.getHash(key);
+                let node = new SkipListNode(hashKey, key, value, level);
+                this.insert(node)
+            }
+            // 插入
+            insert(node) {
+                const key = node._hashKey;
+                const linkedListMap = this.linkedListMap;
+                let current = null;
+                for (let i = this.level; i >= 0; i--) {
+                    let linkedList = linkedListMap[i];
+                    let value = linkedList.findLastEqNode(key, current);
+                    console.log('value', value)
+                    if (value === __empty) {
+                        node[i] && linkedList.insert(node[i], 0)
+                        current = null;
+                    } else if (value === __last) {
+                        current = linkedList.getEndtNode()
+                        node[i] && linkedList.insert(node[i])
+                    } else {
+                        linkedList.insertAfterNode(value, node[i])
+                        current = value
+                    }
                 }
             }
             // 获取随机层数
@@ -278,52 +328,39 @@
                     if (Math.random() > 0.5) {
                         ++current;
                     } else {
-                        return current 
+                        return current
                     }
                 }
                 return current
             }
-            //  添加
-            add(value) {
-                if (value === undefined) return;
-                let linkedListMap = this.linkedListMap;
-                let level = SkipList.randomlevel(this.level);
-                let node = new SkipListNode(value, level);
-                this.insert(node)
-            }
-            // 插入
-            insert(node) {
-                let linkedListMap = this.linkedListMap;
-                let current = null;
-                for (let i = this.level; i >= 0; i--) {
-                    let linkedList = linkedListMap[i];
-                    let value = linkedList.findLastEqNode(node._value, this.compare, current);
-                    if (value === '__empty') {
-                        node[i] && linkedList.insert(node[i], 0)
-                        current = null;
-                    } else if (value === '__last') {
-                        current = linkedList.getEndtNode()
-                        node[i] && linkedList.insert(node[i])
-                    } else {
-                        linkedList.insertAfterNode(value, node[i])
-                        current = value
-                    }
-                }
-            }
-
             // 默认比对的方法
             static compare(a, b) {
                 return a - b
             }
+
+            // 默认转hash值的方法
+            static getHash(key) {
+                key += '';
+                const len = key.length;
+                let num = 0;
+                for (let i = 0; i < len; i++) {
+                    num += key.charCodeAt(i)
+                }
+                return num % hashNum;
+            }
         }
-        let a = new SkipList(3, function (a, b) {
-            return a - b
+
+        let a = new SkipList({
+            level: 3,
+            compare: function (a, b) {
+                return a - b
+            }
         })
-        a.add(1)
-        a.add(4)
-        a.add(2)
-        a.add(3)
-        a.add(5)
+        a.add(1, 1)
+        a.add(4, 4)
+        a.add(6, 6)
+        a.add(2, 2)
+        a.add(5, 5)
         console.log(a)
     </script>
 </body>
