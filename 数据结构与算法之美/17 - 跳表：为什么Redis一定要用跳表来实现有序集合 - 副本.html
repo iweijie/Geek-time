@@ -13,7 +13,7 @@
         // 常量
         const hashNum = Math.pow(2, 32); // hash 取模
         const __empty = {}; // 查询当前层数小于当比对值为空时返回
-        const __last = {};  // 查询当前层数大于等于当比对值为空时返回
+        const __last = {}; // 查询当前层数大于等于当比对值为空时返回
 
         // 双向链表
         class DoubleNode {
@@ -43,7 +43,8 @@
             }
             // 任意位置插入
             insert(value, position) {
-                if (position !== undefined && (typeof position !== "number" || position < 0 || (this.length && position > this.length - 1))) return false;
+                if (position !== undefined && (typeof position !== "number" || position < 0 || (this.length &&
+                        position > this.length - 1))) return false;
                 const node = new DoubleNode(value);
                 let f = this.firstNode;
                 let e = this.endtNode;
@@ -68,43 +69,16 @@
                 this.length++;
                 return true;
             }
-            // 依据索引删除
-            removeByIndex(index) {
-                if (typeof index !== "number" || index < 0 || index > this.length - 1) return false;
-                let f = this.firstNode;
-                let e = this.endtNode;
-                if (!this.getSize()) {
-                    return false
-                } else if (index === this.length - 1) {
-                    this.endtNode = this.endtNode.pre;
-                    this.endtNode.setNext(null);
-                    e.clear()
-                } else if (index === 0) {
-                    this.firstNode = this.firstNode.next;
-                    this.firstNode.setPre(null);
-                    f.clear()
-                } else {
-                    let current = this.findByIndex(index);
-                    let p = current.pre;
-                    let n = current.next;
-                    p.setNext(n);
-                    n.setPre(p);
-                    current.clear()
-                }
-                this.length--;
-                return true;
-            }
             // 依据 节点 删除自身
             removeByNode(node) {
                 let f = this.firstNode;
                 let e = this.endtNode;
                 if (node === f) {
                     this.firstNode = node.next;
-                    this.firstNode.setPre(null);
+                    this.firstNode && this.firstNode.setPre(null);
                 } else if (node === e) {
                     this.endtNode = node.pre;
-                    this.firstNode.setNext(null);
-                    node.clear()
+                    this.firstNode && this.firstNode.setNext(null);
                 } else {
                     let p = node.pre;
                     let n = node.next;
@@ -113,6 +87,12 @@
                 }
                 node.clear();
                 this.length--;
+                const size = this.getSize();
+                if (!size) {
+                    this.firstNode = null;
+                    this.endtNode = null;
+                }
+                return true;
             }
             // 依据索引查询元素
             findByIndex(index) {
@@ -124,51 +104,6 @@
                     node = node.next
                 }
                 return node
-            }
-            // 依据 值 查询元素
-            findByValue(value) {
-                let node = this.firstNode;
-                while (node) {
-                    if (node.value === value) {
-                        return node;
-                    } else {
-                        node = node.next;
-                    }
-                }
-                return -1
-            }
-            // 依据 node 查询后续是否存在该元素
-            findByValue(value) {
-                let node = this.firstNode;
-                while (node) {
-                    if (node.value === value) {
-                        return node;
-                    } else {
-                        node = node.next;
-                    }
-                }
-                return -1
-            }
-            // 插入某个节点之前
-            insertBeforeNode(before, value) {
-                if (!value ||
-                    !before ||
-                    !(before instanceof DoubleNode)
-                ) return false
-                const node = new DoubleNode(value);
-                let f = this.firstNode;
-                if (!before.pre) {
-                    f.setPre(node)
-                    node.setNext(f)
-                    this.firstNode = node
-                } else {
-                    before.pre.setNext(node)
-                    node.setPre(before.pre)
-                    node.setNext(before)
-                    before.setPre(node)
-                }
-                this.length++;
-                return true;
             }
             // 插入某个节点之后
             insertAfterNode(after, value) {
@@ -191,19 +126,6 @@
                 this.length++;
                 return true;
             }
-
-            // // 查询第一个大于给定值的元素
-            // findFirstGtNode(value, compare, startNode) {
-            //     if (!this.getSize()) return __empty
-            //     compare = compare || DoublyLinkedList.compare;
-            //     let first = startNode || this.firstNode;
-            //     while (first) {
-            //         let num = compare(value, first.value && first.value._value && first.value._value.key);
-            //         if (num < 0) return first;
-            //         first = first.next
-            //     }
-            //     return __last
-            // }
 
             // 查询最后一个小于等于给定值的元素
             findLastEqNode(key, startNode) {
@@ -242,7 +164,10 @@
         // 跳表节点
         class SkipListNode {
             constructor(hashKey, key, value, level = 0) {
-                this._value = { key, value };
+                this._value = {
+                    key,
+                    value
+                };
                 this._level = level;
                 this._hashKey = hashKey;
                 for (let i = 0; i <= level; i++) {
@@ -251,7 +176,9 @@
             }
             clear() {
                 for (let i = 0; i <= this._level; i++) {
+                    debugger;
                     this[i] && this[i].clear()
+                    this[i] = null;
                 }
                 this._value = null;
                 this._level = null;
@@ -259,10 +186,14 @@
         }
 
         /**
-        * 跳表的实现
-        * @params level      number   层级
-        * @params compare   function 值之间比对的方法
-        */
+         * 跳表的实现
+         * @params level      number   层级
+         * @params compare   function 值之间比对的方法
+         */
+
+        const symbolInit = Symbol.for('init');
+        const symbolLinkedListMap = Symbol.for('linkedListMap');
+        const symbolFindNode = Symbol.for('findNode');
 
         class SkipList {
             constructor({
@@ -273,20 +204,20 @@
                 // 用于设置当前跳表层级
                 this.level = level;
                 /**
-                * 用于设置当前跳表层级双向链表引用
-                * 格式 ： {
-                *       0 ：new DoubleNode()
-                *       1 ：new DoubleNode()
-                *       2 ：new DoubleNode()
-                *       3 ：new DoubleNode()
-                *    }
-                */
-                this.linkedListMap = {};
-                this.init();
+                 * 用于设置当前跳表层级双向链表引用
+                 * 格式 ： {
+                 *       0 ：new DoubleNode()
+                 *       1 ：new DoubleNode()
+                 *       2 ：new DoubleNode()
+                 *       3 ：new DoubleNode()
+                 *    }
+                 */
+                this[symbolLinkedListMap] = {};
+                this[symbolInit]();
             }
             // 初始化 用于设置 表头 表尾
-            init() {
-                let map = this.linkedListMap;
+            [symbolInit]() {
+                let map = this[symbolLinkedListMap];
                 for (let i = 0; i <= this.level; i++) {
                     map[i] = new DoublyLinkedList();
                 }
@@ -294,35 +225,105 @@
             //  添加
             add(key, value) {
                 if (key === undefined) return;
-                let linkedListMap = this.linkedListMap;
+                let linkedListMap = this[symbolLinkedListMap];
                 let level = SkipList.randomlevel(this.level);
                 const hashKey = SkipList.getHash(key);
-                let node = new SkipListNode(hashKey, key, value, level);
-                this.insert(node)
-            }
-            // 插入
-            insert(node) {
-                const key = node._hashKey;
-                const linkedListMap = this.linkedListMap;
+                console.log(hashKey)
+                let skipListNode = new SkipListNode(hashKey, key, value, level);
                 let current = null;
                 for (let i = this.level; i >= 0; i--) {
                     let linkedList = linkedListMap[i];
-                    let value = linkedList.findLastEqNode(key, current);
-                    console.log('value', value)
-                    if (value === __empty) {
-                        node[i] && linkedList.insert(node[i], 0)
+                    let node = linkedList.findLastEqNode(hashKey, current && current.value && current.value[i]);
+                    if (node === __empty) {
+                        skipListNode[i] && linkedList.insert(skipListNode[i], 0)
                         current = null;
-                    } else if (value === __last) {
+                    } else if (node === __last) {
                         current = linkedList.getEndtNode()
-                        node[i] && linkedList.insert(node[i])
+                        skipListNode[i] && linkedList.insert(skipListNode[i])
                     } else {
-                        linkedList.insertAfterNode(value, node[i])
-                        current = value
+                        linkedList.insertAfterNode(node, skipListNode[i])
+                        current = node
                     }
                 }
             }
+
+            // findNode
+            [symbolFindNode](key) {
+                const level = this.level;
+                const linkedListMap = this[symbolLinkedListMap];
+                const hashKey = SkipList.getHash(key);
+                let current = null;
+                let firstEqNode = null;
+                for (let i = this.level; i >= 0; i--) {
+                    let linkedList = linkedListMap[i];
+                    let value = linkedList.findLastEqNode(hashKey, current && current.value && current.value[i]);
+                    if (value === __empty) {
+                        current = null;
+                    } else if (value === __last) {
+                        current = linkedList.getEndtNode()
+                    } else {
+                        current = value;
+                        if (key === (value.value && value.value._hashKey)) {
+                            firstEqNode = value;
+                            break;
+                        }
+                    }
+                }
+                if (!firstEqNode) return undefined;
+                return firstEqNode
+            }
+            //  查询
+            find(key) {
+                const node = this[symbolFindNode](key);
+                return node && node.value && node.value._value && node.value._value.value;
+            }
+
+            // 删除
+            remove(key) {
+                const node = this[symbolFindNode](key);
+                if (!node) return false;
+                const linkedListMap = this[symbolLinkedListMap];
+                const value = node.value;
+                for (let i = this.level; i >= 0; i--) {
+                    let linkedList = linkedListMap[i];
+                    value[i] && linkedList.removeByNode(value[i])
+                    value[i].clear();
+                }
+                return true;
+            }
+            // 获取顺序队列
+            toArray() {
+                const arr = [];
+                const linkedList = this[symbolLinkedListMap][0];
+                if (!linkedList.getSize()) return arr;
+                let first = linkedList.getFirstNode();
+                while (first) {
+                    const value = first.value && first.value._value && first.value._value.value;
+                    arr.push(value)
+                    first = first.next
+                };
+                return arr;
+            }
+
+            // 打印 hashKey值
+            log() {
+                const linkedListMap = this[symbolLinkedListMap];
+                for (let i = this.level; i >= 0; i--) {
+                    let linkedList = linkedListMap[i];
+                    if (!linkedList.getSize()) continue;
+                    let first = linkedList.getFirstNode();
+                    let str = `${i} `;
+                    while (first) {
+                        str += ' ' + first.value._hashKey
+                        first = first.next
+                    };
+                    console.log(str);
+                }
+            }
+
             // 获取随机层数
             static randomlevel(level) {
+                // return random.create();
                 let current = 0;
                 while (current < level) {
                     if (Math.random() > 0.5) {
@@ -350,18 +351,22 @@
             }
         }
 
-        let a = new SkipList({
-            level: 3,
-            compare: function (a, b) {
-                return a - b
-            }
-        })
+        let a = new SkipList({})
         a.add(1, 1)
-        a.add(4, 4)
-        a.add(6, 6)
         a.add(2, 2)
+        a.add(3, 3)
+        a.add(4, 4)
         a.add(5, 5)
+        const obj = {}
+        // for (let i = 0; i < 100; i++) {
+        //     const num = Math.floor(Math.random() * 100 + 100);
+        //     if (!obj[num]) {
+        //         obj[num] = true;
+        //         a.add(num, num)
+        //     }
+        // }
         console.log(a)
+        a.log()
     </script>
 </body>
 
