@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+
+<body>
+    <script>
+        const store = Symbol ? Symbol("store") : "__store";
+        const prefixCallBackStore = Symbol ? Symbol("prefixCallBackStore") : "__prefixCallBackStore";
+
+        class Observer {
+            constructor() {
+                this[store] = {};
+                this[prefixCallBackStore] = {};
+            }
+
+            /**
+             * 前置触发； 在不确定当前类型是否注册时调用；如果已注册会直接调用；否则加入队列中；在初次注册时会调用
+             * @param {String} type  注册的类型值 必传
+             * @param {Any} payload  注册函数调用的参数 选传
+             * @return {Promise} 返回Promise；
+             */
+
+            prefixEmit(type, ...payload) {
+                const fn = this[store][type];
+                if (!fn) {
+                    let success = (resolve) => (value) => {
+                        delete this[prefixCallBackStore][type];
+                        resolve(value)
+                    };
+                    let cancel = (reject) => () => {
+                        delete this[prefixCallBackStore][type];
+                        reject()
+                    }
+                    const p = new Promise((resolve, reject) => {
+                        success = success(resolve)
+                        cancel = cancel(reject)
+                    })
+                    this[prefixCallBackStore][type] = {
+                        payload,
+                        success,
+                        cancel
+                    }
+                    return p;
+                };
+                return Promise.resolve(fn.call(null, ...payload))
+            }
+
+            /**
+             * @param {String} type  注册的类型值 必传
+             * @param {Any} payload  注册函数调用的参数 选传
+             * @return 注册函数的返回值； false 表不存在;
+             */
+
+            emit(type, ...payload) {
+                const fn = this[store][type];
+                if (!fn) {
+                    console.log(`当前类型 ${type} 没有注册事件，请先注册事件再次尝试`)
+                    return false
+                };
+                return fn.call(null, ...payload)
+            }
+
+            /**
+             * @param {String} type  注册的类型值 必传
+             * @param {Function} callback  注册函数 选传
+             * @return  false 表已存在;  否则为 undefined
+             */
+            on(type, callback) {
+                if (this[store][type]) {
+                    console.log(`当前 ${type} 已经注册，请勿重复注册`)
+                    return false;
+                }
+                this[store][type] = callback;
+                const preCallBack = this[prefixCallBackStore][type];
+                if (preCallBack) {
+                    const result = this.emit(type, ...preCallBack.payload);
+                    preCallBack.success(result)
+                }
+            }
+
+            /**
+             * @param {String} type  注册的类型值 必传
+             * @return  false 表不存在；移除成功，返回注册的函数
+             */
+            remove(type) {
+                const fn = this[store][type];
+                if (!type || !fn) {
+                    console.log(`当前类型 ${type} 没有注册事件，移除失败`)
+                    return false;
+                }
+                delete this[store][type];
+                return fn
+            }
+
+            /**
+             * 一次触发就移除的注册事件；在调用一次后移除绑定；
+             * @param {String} type  注册的类型值 必传
+             * @param {Function} callback  注册函数调用的参数 选传
+             * @return {Promise} 返回注册函数的返回值；
+             */
+
+            once(type, callback) {
+                if (!type) return;
+                const _this = this;
+                const anonym = function (payload) {
+                    let result;
+                    result = callback(payload);
+                    _this.remove(type);
+                    return result
+                };
+                this.on(type, anonym)
+            }
+        }
+        const a = new Observer();
+        a.prefixEmit("test", 'weijie')
+            .then(a => {
+                console.log(a);
+            })
+        a.once('test', (payload) => {
+            console.log("test-----1")
+            console.log(payload)
+            return "小骗子"
+        })
+    </script>
+</body>
+
+</html>
