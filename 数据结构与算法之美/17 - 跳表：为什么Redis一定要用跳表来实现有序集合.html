@@ -15,7 +15,7 @@
         const __empty = {}; // 查询当前层数小于当比对值为空时返回
         const __last = {}; // 查询当前层数大于等于当比对值为空时返回
 
-        // 双向链表
+        // 双向链表节点
         class DoubleNode {
             constructor(value) {
                 if (value instanceof DoubleNode) return value;
@@ -35,6 +35,7 @@
                 this.next = null;
             }
         }
+        // 双向链表
         class DoublyLinkedList {
             constructor() {
                 this.firstNode = null;
@@ -44,7 +45,7 @@
             // 任意位置插入
             insert(value, position) {
                 if (position !== undefined && (typeof position !== "number" || position < 0 || (this.length &&
-                        position > this.length - 1))) return false;
+                    position > this.length - 1))) return false;
                 const node = new DoubleNode(value);
                 let f = this.firstNode;
                 let e = this.endtNode;
@@ -135,6 +136,8 @@
                 let num = compare(key, first.value && first.value._hashKey);
                 if (num < 0) {
                     if (first === this.firstNode) return __empty
+                    return first
+                } else if (num === 0) {
                     return first
                 }
                 while (first.next) {
@@ -263,18 +266,18 @@
                         current = linkedList.getEndtNode()
                     } else {
                         current = value;
-                        if (key === (value.value && value.value._hashKey)) {
+                        if (key === (value.value && value.value._value && value.value._value.key)) {
                             firstEqNode = value;
                             break;
                         }
                     }
                 }
-                if (!firstEqNode) return undefined;
-                return firstEqNode
+                return firstEqNode || undefined
             }
             //  查询
             find(key) {
                 const node = this[symbolFindNode](key);
+                if (undefined === node) return -1;
                 return node && node.value && node.value._value && node.value._value.value;
             }
 
@@ -287,7 +290,7 @@
                 for (let i = this.level; i >= 0; i--) {
                     let linkedList = linkedListMap[i];
                     value[i] && linkedList.removeByNode(value[i])
-                    value[i].clear();
+                    value[i] && value[i].clear();
                 }
                 return true;
             }
@@ -357,7 +360,11 @@
         a.add(3, 3)
         a.add(4, 4)
         a.add(5, 5)
-        const obj = {}
+        debugger;
+        a.remove(1);
+        console.log(a.find(1))
+        console.log(a.find(3))
+        // const obj = {}
         // for (let i = 0; i < 100; i++) {
         //     const num = Math.floor(Math.random() * 100 + 100);
         //     if (!obj[num]) {
