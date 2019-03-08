@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+
+<body>
+    <script>
+        // https://leetcode-cn.com/problems/longest-palindromic-substring/
+
+        // 给定一个字符串 s，找到 s 中最长的回文子串。你可以假设 s 的最大长度为 1000。
+
+        // 示例 1：
+
+        // 输入: "babad"
+        // 输出: "bab"
+        // 注意: "aba" 也是一个有效答案。
+        // 示例 2：
+
+        // 输入: "cbbd"
+        // 输出: "bb"
+
+        /**
+         * @param {string} s
+         * @return {string}
+         */
+        var longestPalindrome = function (s) {
+            if(!s) return s;
+            const insertion = ['~', '!', '@', '#', '$', '%', '^', '&', '*', "(", ")", "_", "+", "<", ">", "?", ",",
+                ".", '/'
+            ];
+            let str, sign, len = 0;
+            for (let i = 0; i < insertion.length; i++) {
+                if (!s.includes(insertion[i])) {
+                    sign = insertion[i];
+                    break;
+                }
+            }
+            const transformStr = s.split('').join(sign);
+
+            for (let i = 0; i < s.length; i++) {
+                const l = getPalindromeLen(i, s);
+                if (l > len) {
+                    len = l;
+                    str = s.slice(i - len, i + len + 1);
+                }
+            }
+
+            for (let i = 1; i < transformStr.length; i += 2) {
+                const l = getPalindromeLen(i, transformStr);
+                if (l > len) {
+                    len = l;
+                    str = transformStr.slice(i - len, i + len + 1).split(sign).join('');
+                }
+            }
+            return str;
+
+        };
+
+        var getPalindromeLen = function (point, str) {
+            const len = Math.floor(str.length / 2);
+            let max = 0;
+            for (let i = 1; i <= len; i++) {
+                if (str[point + i] === str[point - i]) {
+                    max++;
+                } else {
+                    return max;
+                }
+            }
+            return max;
+        }
+
+        const str = "cbbd"
+        console.log(longestPalindrome(str))
+        // var isPalindrome = function (s) {
+        //     const l = s.length;
+        //     let left, right, c;
+        //     if (l % 2) {
+        //         // 中点
+        //         c = (l + 1) / 2;
+        //         left = s.slice(0, c - 1)
+        //         right = s.slice(c + 1)
+        //     } else {
+        //         c = l / 2;
+        //         left = s.slice(0, c)
+        //         right = s.slice(c + 1)
+        //     }
+        //     return left === reversStr(rigth);
+        // }
+
+        // var reversStr = function (s) {
+        //     if (!s) return s;
+        //     return s.split('').revers().join('');
+        // }
+    </script>
+</body>
+
+</html>
