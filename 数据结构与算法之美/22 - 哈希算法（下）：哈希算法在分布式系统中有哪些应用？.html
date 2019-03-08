@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>22 | 哈希算法（下）：哈希算法在分布式系统中有哪些应用？</title>
+</head>
+
+<body>
+    <h1>一致性哈希</h1>
+    <script>
+
+        class CreateIpList {
+            constructor(hashNum) {
+                // hash 取模
+                this.hashNum = hashNum || 10000;
+                this.ipList = []
+            }
+            // key 为名称
+            // value 为实际ip地址
+            add(key, value) {
+                if(!this.isIp(value)) return console.log("ip 不对")
+                const hash = CreateIpList.getHash(key, this.hashNum);
+                const index = this.ipList.findIndex(v => v.hash === hash);
+                if (index === -1) {
+                    this.ipList.push({
+                        hash,
+                        ip: value
+                    })
+                } else {
+                    console.log("当前节点已注册")
+                }
+            }
+            // key  为名称或 ip; 若为ip 删除当前ip注册的所有节点
+            remove(key) {
+                if (isIp(key)) {
+                    const len = this.ipList.length;
+                    for (let i = len - 1; i <= 0; i--) {
+                        if (this.ipList[i].ip === key) {
+                            this.ipList.splice(i, 1)
+                        }
+                    }
+                } else {
+                    const hash = CreateIpList.getHash(key, this.hashNum);
+                    const index = this.ipList.findIndex(v => v.hash === hash);
+                    index !== -1 && this.ipList.splice(index, 1)
+                }
+            }
+            //  key 为缓存唯一标识
+            findIp(key) {
+                if (this.isEmpty()) return -1;
+                const hash = CreateIpList.getHash(key, this.hashNum);
+                const { ipList } = this;
+                const len = ipList.length;
+                for (let i = 0; i < len; i++) {
+                    if (hash <= ipList[i].hash) {
+                        return ipList[i].ip
+                    }
+                }
+                return ipList[0].ip
+            }
+            isIp(key) {
+                return /^(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9])\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[0-9])$/.test(key);
+            }
+
+            // 获取随机hash值算法 待定
+
+            isEmpty() {
+                return !!this.ipList.length
+            }
+
+            static getHash(key, hashNum) {
+                key += '';
+                const len = key.length;
+                let num = 0;
+                for (let i = 0; i < len; i++) {
+                    num += key.charCodeAt(i)
+                }
+                return num % hashNum;
+            }
+        }
+
+        const a = new CreateIpList();
+        a.add('test#1', '201.123.10.122')
+        a.add('test#2', '201.123.10.122')
+        a.add('weijie#1', '199.0.10.111')
+        a.add('weijie#2', '199.0.10.111')
+        console.log(a)
+    </script>
+</body>
+
+</html>
