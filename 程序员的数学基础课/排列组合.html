@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+
+<body>
+    <script>
+        // 假设现在需要设计一个抽奖系统。 需要依次从 10 个人中， 抽取三等奖 3 名， 二等奖 2 名和一等奖 1 名。
+        // 请列出所有可能的组合， 需要注意的每人最多只能被抽中 1 次。
+        let arr = []
+        for (let i = 0; i <= 10; i++) {
+            arr.push(i)
+        }
+        // 从 n 个数中 选择 m 个子集
+        // 全排列组合 不考虑排列
+        function prize(teams, mode) {
+            const list = []
+
+            function prize(teams = [], mode = 0, result = []) {
+                for (let i = 0; i < teams.length; i++) {
+                    if (result.length >= mode) {
+                        list.push(result)
+                        return result
+                    }
+                    const newResult = result.slice(0)
+                    newResult.push(teams[i])
+                    const newTeams = teams.slice(i + 1)
+                    prize(newTeams, mode, newResult)
+                }
+            }
+            prize(teams, mode)
+            return list
+        }
+        console.log(prize(arr, 6))
+
+        // 列表 全排列
+        function permutation(teams = [], result = []) {
+            if (!teams.length) {
+                console.log(result)
+                return result
+            }
+            for (let i = 0; i < teams.length; i++) {
+                const newResult = result.slice(0)
+                newResult.push(teams[i])
+                const newTeams = teams.slice(0)
+                newTeams.splice(i, 1)
+                permutation(newTeams, newResult)
+            }
+        }
+        // const a = [2, 4, 5, 7,8]
+        // permutation(a)
+
+        // 从 n 个数中 选择 m 个子集
+        // (m 为列表，即取多个子集，且一个值只会存在于一个子集中)
+        // 全排列组合 不考虑排列
+        // function prize(teams, mode) {
+        //     const list = []
+
+        //     function prize(teams = [], mode = 0, result = []) {
+        //         mode.forEach(v => {
+        //             for (let i = 0; i < teams.length; i++) {
+        //                 if (result.length >= mode) {
+        //                     list.push(result)
+        //                     return result
+        //                 }
+        //                 const newResult = result.slice(0)
+        //                 newResult.push(teams[i])
+        //                 const newTeams = teams.slice(i + 1)
+        //                 prize(newTeams, mode, newResult)
+        //             }
+        //         });
+        //     }
+        //     prize(teams, mode)
+
+        //     return list
+        // }
+        // console.log(prize(arr, [1, 2, 3]))
+    </script>
+</body>
+
+</html>

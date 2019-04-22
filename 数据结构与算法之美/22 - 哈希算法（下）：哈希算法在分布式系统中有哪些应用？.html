@@ -11,7 +11,6 @@
 <body>
     <h1>一致性哈希</h1>
     <script>
-
         class CreateIpList {
             constructor(hashNum) {
                 // hash 取模
@@ -21,8 +20,8 @@
             // key 为名称
             // value 为实际ip地址
             add(key, value) {
-                if(!this.isIp(value)) return console.log("ip 不对")
-                const hash = CreateIpList.getHash(key, this.hashNum);
+                if (!this.isIp(value)) return console.log("ip 不对")
+                const hash = CreateIpList.FNVHash1(key + value, this.hashNum);
                 const index = this.ipList.findIndex(v => v.hash === hash);
                 if (index === -1) {
                     this.ipList.push({
@@ -34,25 +33,27 @@
                 }
             }
             // key  为名称或 ip; 若为ip 删除当前ip注册的所有节点
-            remove(key) {
-                if (isIp(key)) {
-                    const len = this.ipList.length;
-                    for (let i = len - 1; i <= 0; i--) {
-                        if (this.ipList[i].ip === key) {
-                            this.ipList.splice(i, 1)
-                        }
+            remove(key, ip) {
+                // if (!isIp(key)) {
+                //     console.log("ip 不对");
+                //     return false
+                // }
+                const len = this.ipList.length;
+                for (let i = len - 1; i <= 0; i--) {
+                    if (this.ipList[i].hash === key && this.ipList[i].ip === ip) {
+                        this.ipList.splice(i, 1)
+                        return true;
                     }
-                } else {
-                    const hash = CreateIpList.getHash(key, this.hashNum);
-                    const index = this.ipList.findIndex(v => v.hash === hash);
-                    index !== -1 && this.ipList.splice(index, 1)
                 }
+                return false;
             }
             //  key 为缓存唯一标识
             findIp(key) {
                 if (this.isEmpty()) return -1;
                 const hash = CreateIpList.getHash(key, this.hashNum);
-                const { ipList } = this;
+                const {
+                    ipList
+                } = this;
                 const len = ipList.length;
                 for (let i = 0; i < len; i++) {
                     if (hash <= ipList[i].hash) {
@@ -62,7 +63,8 @@
                 return ipList[0].ip
             }
             isIp(key) {
-                return /^(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9])\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[0-9])$/.test(key);
+                return /^(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9])\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[0-9])$/
+                    .test(key);
             }
 
             // 获取随机hash值算法 待定
@@ -80,6 +82,20 @@
                 }
                 return num % hashNum;
             }
+
+            static FNVHash1(data = "", hashNum) {
+                const p = 16777619;
+                let hash = 0;
+                for (let i = 0; i < data.length; i++) {
+                    hash = (hash ^ data.charCodeAt(i)) * p;
+                    hash += hash << 13;
+                    hash ^= hash >> 7;
+                    hash += hash << 3;
+                    hash ^= hash >> 17;
+                    hash += hash << 5;
+                }
+                return Math.abs(hash % hashNum);
+            }
         }
 
         const a = new CreateIpList();
@@ -87,6 +103,8 @@
         a.add('test#2', '201.123.10.122')
         a.add('weijie#1', '199.0.10.111')
         a.add('weijie#2', '199.0.10.111')
+        a.add('weijie#2', '100.0.10.111')
+        a.add('weijie#2', '100.0.10.111')
         console.log(a)
     </script>
 </body>
