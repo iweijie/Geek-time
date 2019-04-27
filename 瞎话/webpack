@@ -1,0 +1,6 @@
+1.  DllPlugin 和 DllReferencePlugin  可以用于提取依赖包，减少构建时间
+
+例子：https://github.com/webpack/webpack/tree/master/examples/dll
+https://github.com/webpack/webpack/tree/master/examples/dll-user
+
+2.  DefindPlugin   可以用于全局变量的引用

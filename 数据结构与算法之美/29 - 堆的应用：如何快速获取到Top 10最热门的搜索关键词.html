@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>29 | 堆的应用：如何快速获取到Top 10最热门的搜索关键词？</title>
+</head>
+
+<body>
+    <script>
+        class Heap {
+            constructor(option) {
+                let list, compare, limit
+                if (option && typeof option === 'object') {
+                    list = option.list
+                    compare = option.compare
+                    limit = option.limit
+                }
+                this.store = [undefined]
+                this.compare = compare || Heap.dufaultCompare
+                this.limit = limit || 0
+                if (Array.isArray(list) && list.length) {
+                    this.buildHeap(list)
+                }
+            }
+            buildHeap(list = []) {
+                const {
+                    store,
+                    limit
+                } = this;
+                if (limit && list.length + store.length - 1 > limit) {
+                    console.log("列表超出限制")
+                    return
+                }
+                store.push(...list)
+                // 1 至 Math.floor(store.length / 2) -- 为有子节点的节点  
+                for (let i = Math.floor(store.length / 2); i > 0; i--) {
+                    this.sink(i)
+                }
+            }
+            // 插入节点 
+            insert(node) {
+                const {
+                    store,
+                    limit
+                } = this
+
+                if (limit && store.length - 1 > limit) {
+                    console.log("列表超出限制")
+                    return
+                }
+                store.push(node)
+                this.rise(store.length - 1)
+            }
+            // 上浮
+            rise(index) {
+                const {
+                    store,
+                    compare
+                } = this
+                let node = store[index]
+                while (true) {
+                    // 父节点索引
+                    const i = Math.floor(index / 2)
+                    if (store[i] === undefined || compare(store[i], node) <= 0) {
+                        break
+                    } else {
+                        Heap.swap(store, index, i)
+                        index = i
+                    }
+                }
+            }
+            // 下沉
+            sink(index) {
+                const {
+                    store,
+                    compare
+                } = this;
+                const len = this.getLength()
+                while (true) {
+                    let c = index
+                    const l = store[index * 2];
+                    const r = store[index * 2 + 1];
+                    if (l !== undefined && compare(store[index], l) > 0) {
+                        c = index * 2
+                    }
+
+                    if (r !== undefined && compare(store[c], r) > 0) {
+                        c = index * 2 + 1
+                    }
+                    // 如果 c === index 即表示 左右节点均不需要修改 直接返回就好
+                    if (c === index) break
+                    Heap.swap(store, c, index)
+                    index = c
+                }
+            }
+
+            // 删除节点 by 索引 
+            delByIndex(index = 1) {
+                const {
+                    store
+                } = this;
+                let r = store[index]
+                if (r === undefined) return
+                store[index] = store[store.length - 1]
+                store.pop()
+                this.sink(index)
+                return r
+            }
+            getSerialization() {
+                const {
+                    store
+                } = this;
+                const list = this.store = store.slice(0)
+                const arr = []
+                while (list.length > 1) {
+                    arr.push(this.delByIndex())
+                }
+                this.store = store
+                return arr
+            }
+            // 获取第一个值  为空 返回 undefiend
+            getFirst() {
+                if (this.isEmpty()) return;
+                return this.store[1]
+            }
+            // 最大 层级  or  深度
+            getTier() {
+                return this.getHeight() + 1
+            }
+            //最大  高度
+            getHeight() {
+                return Math.floor(Math.log2(this.getLength()))
+            }
+            getLength() {
+                return this.store.length - 1
+            }
+            isEmpty() {
+                return this.getLength <= 0
+            }
+            static dufaultCompare(a, b) {
+                return b - a
+            }
+            static swap(arr, i, j) {
+                if (arr[i] === arr[j]) return;
+                [arr[i], arr[j]] = [arr[j], arr[i]]
+            }
+        }
+    </script>
+    <script>
+        // 优先级队列
+        // let arr = []
+        // for (let i = 0; i < 10; i++) {
+        //     if (!arr[i]) {
+        //         arr[i] = []
+        //     }
+        //     for (let j = 0; j < 2; j++) {
+        //         let num = Math.floor(Math.random() * 20)
+        //         arr[i][j] = arr[i][j - 1] ? arr[i][j - 1] + num : num
+        //     }
+        // }
+        // let newArr = []
+
+        // let sign = false
+        // arr.forEach((v, k) => {
+        //     if (v[0] !== undefined) {
+        //         newArr.push({
+        //             value: v[0],
+        //             k
+        //         })
+        //         v.shift()
+        //     }
+        // })
+
+        // function next(arr) {
+        //     for (let i = 0; i < 10; i++) {
+        //         if (arr[i].length) {
+        //             return true
+        //         }
+        //     }
+        //     return false
+        // }
+        // const h = new Heap({
+        //     limit: 10,
+        //     compare: (a, b) => {
+        //         return a.value - b.value
+        //     }
+        // })
+        // h.buildHeap(newArr)
+        // newArr = []
+        // while (next(arr) || h.getLength()) {
+        //     const item = h.delByIndex()
+        //     newArr.push(item)
+        //     const {
+        //         k
+        //     } = item
+        //     if (arr[k].length) {
+        //         h.insert({
+        //             value: arr[k].shift(),
+        //             k
+        //         })
+        //     }
+        // }
+        // console.log(newArr)
+    </script>
+    <script>
+        function node(time, option, call) {
+            if (typeof time === 'string') {
+
+            } else if (typeof time === "object" && time instanceof Date) {
+                return {
+                    t: time.getTime(),
+                    c: call,
+                    o: option,
+                    _o: {
+                        time,
+                        option,
+                    }
+                }
+            }
+
+        }
+        // 高性能定时器
+        class Timer {
+            constructor() {
+                this.isRun = false
+                this.h = new Heap({
+                    compare: (a, b) => {
+                        return a.time - b.time
+                    }
+                })
+            }
+            add(...p) {
+                const item = node(...p)
+                this.h.insert(item)
+                if (!this.isRun) {
+                    this.start()
+                }
+            }
+            start() {
+                const {
+                    h
+                } = this;
+                if (h.isEmpty() || this.isRun) return
+                this.isRun = true
+            }
+            run() {
+                const {
+                    h
+                } = this;
+                const item = h.delByIndex()
+                const {
+                    _o,
+                    t,
+                    c
+                } = item
+                const {
+                    count
+                } = o
+
+                if (count === void 0 || count > 0) {
+                    h.insert({
+                        item
+                    })
+                }
+
+                const delay = Math.max(t - Date.now(), 1)
+                setTimeout(() => {
+                    if (!h.isEmpty()) {
+                        this.run()
+                    }
+                    tryCall(c)
+                }, delay)
+            }
+        }
+
+        function tryCall(fn) {
+            try {
+                fn()
+            } catch (err) {
+                throw err
+            }
+        }
+
+        const t = new Timer()
+        t.add(new Date(), function () {
+            console.log("111111111")
+        })
+        console.log(t)
+    </script>
+    <script>
+        // 利用堆求 Top K (静态)
+
+        // 求前 10 位
+
+        // var arr = ((num = 8888) => {
+        //     var arr = [];
+        //     for (var i = 0; i < num; i++) {
+        //         arr.push(Math.floor(Math.random() * num))
+        //     }
+        //     return arr
+        // })(100)
+
+
+        // const h1 = new Heap({
+        //     list: arr.slice(0, 10),
+        //     compare: (a, b) => {
+        //         return a - b
+        //     }
+        // })
+        // arr = arr.slice(10)
+        // for (let i = 0; i < arr.length; i++) {
+        //     if (h1.getFirst() < arr[i]) {
+        //         h1.delByIndex()
+        //         h1.insert(arr[i])
+        //     }
+        // }
+        // console.log(arr)
+        // console.log(h1)
+        // console.log(h1.getSerialization().reverse())
+    </script>
+    <script>
+        // 利用堆求 Top K (动态)
+        // 添加时  动态比较
+        // const list = []
+        // const h2 = new Heap({
+        //     compare: (a, b) => a - b
+        // })
+
+        // function random(max) {
+        //     return Math.floor(Math.random() * (max || 100))
+        // }
+
+        // function add() {
+        //     let num = random(10000)
+        //     list.push(num)
+        //     compare(num)
+        // }
+
+        // function compare(num) {
+        //     const f = h2.getFirst()
+        //     if (!f) {
+        //         h2.insert(num)
+        //     } else if (h2.getLength() < 4) {
+        //         h2.insert(num)
+        //     } else if (f < num) {
+        //         h2.delByIndex()
+        //         h2.insert(num)
+        //     }
+        // }
+        // add()
+        // add()
+        // add()
+        // add()
+        // add()
+        // add()
+        // add()
+        // add()
+        // add()
+        // add()
+        // add()
+        // console.log(list)
+        // console.log(h2.getSerialization())
+    </script>
+    <script>
+    // 利用堆求中位数
+    
+    </script>
+</body>
+
+</html>

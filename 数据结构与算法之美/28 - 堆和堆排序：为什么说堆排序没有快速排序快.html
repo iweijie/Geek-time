@@ -12,40 +12,58 @@
     <script>
         // 大顶堆:节点的值都大于等于子树中每个节点值的堆，我们叫作“大顶堆”
         // 当前 Heap 依据 compare 建立大顶堆还是小顶堆
+
+        /**
+        * author：weijie
+        * describe： 
+        * @param {Object} option
+        * @param {option} Array     list 初始化顶堆的列表值
+        * @param {option} Function  compare 依据 函数的返回值大小建立大顶堆还是小顶堆，默认为 dufaultCompare，即默认大顶堆
+        * @param {option} Number    limit 顶堆项的最大上线，默认为空，即没有上限
+        */
+        
+        // 当前 Heap 依据 compare 建立大顶堆还是小顶堆
         class Heap {
-            constructor({
-                list = [],
-                compare
-            }) {
+            constructor(option) {
+                let list, compare, limit
+                if (option && typeof option === 'object') {
+                    list = option.list
+                    compare = option.compare
+                    limit = option.limit
+                }
                 this.store = [undefined]
                 this.compare = compare || Heap.dufaultCompare
-                this.buildHeap(list, list.length)
+                this.limit = limit || 0
+                if (Array.isArray(list) && list.length) {
+                    this.buildHeap(list)
+                }
             }
             buildHeap(list = []) {
                 const {
-                    store
+                    store,
+                    limit
                 } = this;
+                if (limit && list.length + this.getLength() > limit) {
+                    console.log("列表超出限制")
+                    return
+                }
                 store.push(...list)
                 // 1 至 Math.floor(store.length / 2) -- 为有子节点的节点  
                 for (let i = Math.floor(store.length / 2); i > 0; i--) {
                     this.sink(i)
                 }
-                // for (let i = tier - 1; i > 0; i--) {
-                //     const start = Math.pow(2, i - 1)
-                //     const end = Math.pow(2, i)
-                //     for (let j = start; j < end; j++) {
-                //         debugger
-                //         this.sink(j)
-                //         // this.heapify(store, 15, j);
-                //     }
-                // }
             }
             // 插入节点 
             insert(node) {
                 const {
                     store,
-                    compare
+                    limit
                 } = this
+
+                if (limit && store.length - 1 > limit) {
+                    console.log("列表超出限制")
+                    return
+                }
                 store.push(node)
                 this.rise(store.length - 1)
             }
@@ -59,7 +77,7 @@
                 while (true) {
                     // 父节点索引
                     const i = Math.floor(index / 2)
-                    if (compare(store[i], node) <= 0) {
+                    if (store[i] === undefined || compare(store[i], node) <= 0) {
                         break
                     } else {
                         Heap.swap(store, index, i)
@@ -73,14 +91,16 @@
                     store,
                     compare
                 } = this;
-                const len = store.length
+                const len = this.getLength()
                 while (true) {
                     let c = index
-                    if (index * 2 <= len && compare(store[index], store[index * 2]) > 0) {
+                    const l = store[index * 2];
+                    const r = store[index * 2 + 1];
+                    if (l !== undefined && compare(store[index], l) > 0) {
                         c = index * 2
                     }
 
-                    if (index * 2 + 1 <= len && compare(store[c], store[index * 2 + 1]) > 0) {
+                    if (r !== undefined && compare(store[c], r) > 0) {
                         c = index * 2 + 1
                     }
                     // 如果 c === index 即表示 左右节点均不需要修改 直接返回就好
@@ -91,12 +111,12 @@
             }
 
             // 删除节点 by 索引 
-            delByIndex(index) {
+            delByIndex(index = 1) {
                 const {
                     store
                 } = this;
                 let r = store[index]
-                if (r === undefined) return r
+                if (r === undefined) return
                 store[index] = store[store.length - 1]
                 store.pop()
                 this.sink(index)
@@ -109,22 +129,24 @@
                 const list = this.store = store.slice(0)
                 const arr = []
                 while (list.length > 1) {
-                    arr.push(this.delByIndex(1))
+                    arr.push(this.delByIndex())
                 }
                 this.store = store
                 return arr
             }
+            // 最大 层级  or  深度
             getTier() {
                 return this.getHeight() + 1
             }
+            //最大  高度
             getHeight() {
-                return Math.floor(Math.log2(this.store.length - 1))
+                return Math.floor(Math.log2(this.getLength()))
             }
             getLength() {
-                return this.store.length
+                return this.store.length - 1
             }
             isEmpty() {
-                return this.store.length <= 1
+                return this.getLength <= 0
             }
             static dufaultCompare(a, b) {
                 return b - a
@@ -135,76 +157,75 @@
             }
         }
 
+        // 堆排序
+        const quicksortByHeap = (function () {
+            // 建堆
+            const buildHeap = (store = [], compare) => {
+                // 1 至 Math.floor(store.length / 2) -- 为有子节点的节点  
+                for (let i = Math.floor(store.length / 2); i > 0; i--) {
+                    sink(store, i, compare)
+                }
+            }
+            // 下沉
+            const sink = (store = [], index = 0, compare) => {
+                const len = store.length
+                while (true) {
+                    let c = index
+                    if (index * 2 <= len && compare(store[index], store[index * 2]) > 0) {
+                        c = index * 2
+                    }
 
-// 堆排序
-const quicksortByHeap = (function () {
-    // 建堆
-    const buildHeap = (store = [], compare) => {
-        // 1 至 Math.floor(store.length / 2) -- 为有子节点的节点  
-        for (let i = Math.floor(store.length / 2); i > 0; i--) {
-            sink(store, i, compare)
-        }
-    }
-    // 下沉
-    const sink = (store = [], index = 0, compare) => {
-        const len = store.length
-        while (true) {
-            let c = index
-            if (index * 2 <= len && compare(store[index], store[index * 2]) > 0) {
-                c = index * 2
+                    if (index * 2 + 1 <= len && compare(store[c], store[index * 2 + 1]) > 0) {
+                        c = index * 2 + 1
+                    }
+                    // 如果 c === index 即表示 左右节点均不需要修改 直接返回就好
+                    if (c === index) break
+                    swap(store, c, index)
+                    index = c
+                }
+            }
+            // 删除
+            const del = (store = [], index, compare) => {
+                let r = store[index]
+                if (r === undefined) return r
+                store[index] = store[store.length - 1]
+                store.pop()
+                sink(store, index, compare)
+                return r
+            }
+            const getSerialization = (store = [], compare) => {
+                const arr = []
+                while (store.length > 1) {
+                    arr.push(del(store, 1, compare))
+                }
+                return arr
             }
 
-            if (index * 2 + 1 <= len && compare(store[c], store[index * 2 + 1]) > 0) {
-                c = index * 2 + 1
+            const swap = (arr, i, j) => {
+                if (arr[i] === arr[j]) return;
+                [arr[i], arr[j]] = [arr[j], arr[i]]
             }
-            // 如果 c === index 即表示 左右节点均不需要修改 直接返回就好
-            if (c === index) break
-            swap(store, c, index)
-            index = c
-        }
-    }
-    // 删除
-    const del = (store = [], index, compare) => {
-        let r = store[index]
-        if (r === undefined) return r
-        store[index] = store[store.length - 1]
-        store.pop()
-        sink(store, index, compare)
-        return r
-    }
-    const getSerialization = (store = [], compare) => {
-        const arr = []
-        while (store.length > 1) {
-            arr.push(del(store, 1, compare))
-        }
-        return arr
-    }
+            const dufaultCompare = (a, b) => {
+                return b - a
+            }
+            return function (arr, compare) {
+                compare = compare || dufaultCompare
+                arr = [undefined, ...arr]
+                buildHeap(arr, compare)
+                return getSerialization(arr, compare)
+            }
+        })()
 
-    const swap = (arr, i, j) => {
-        if (arr[i] === arr[j]) return;
-        [arr[i], arr[j]] = [arr[j], arr[i]]
-    }
-    const dufaultCompare = (a, b) => {
-        return b - a
-    }
-    return function (arr, compare) {
-        compare = compare || dufaultCompare
-        arr = [undefined, ...arr]
-        buildHeap(arr, compare)
-        return getSerialization(arr, compare)
-    }
-})()
-
-var arr = ((num = 8888) => {
-    var arr = [];
-    for (var i = 0; i < num; i++) {
-        arr.push(Math.floor(Math.random() * num))
-    }
-    return arr
-})(100)
-console.time("Heap")
-console.log(quicksortByHeap(arr))
-console.timeEnd("Heap")
+        var arr = ((num = 8888) => {
+            var arr = [];
+            for (var i = 0; i < num; i++) {
+                arr.push(Math.floor(Math.random() * num))
+            }
+            return arr
+        })(100)
+        console.time("Heap")
+        console.log(quicksortByHeap(arr))
+        console.timeEnd("Heap")
     </script>
 </body>
 
